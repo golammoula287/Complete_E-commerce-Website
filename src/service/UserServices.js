@@ -21,6 +21,8 @@ const UserOTPService = async (req) => {
             }
         },{upsert:true});
 
+        console.log(`OTP stored in database for ${email}`);
+
         return {ststus: "success", message: "6 digit OTP send to your email."};
     
     } catch(err) {
@@ -30,32 +32,41 @@ const UserOTPService = async (req) => {
 }
 
 const VerifyOTPService = async (req) => {
-
     try {
         let email = req.params.email;
         let otp = req.params.otp;
 
-        let total = await UserModel.find({email: email, otp: otp}).count('total');
-        
-        if(total === 1) {
-            let user_id = await UserModel.find({
-                email: email, otp: otp
-            }).select('_id');
+        //console.log(`Received Email: ${email}, OTP: ${otp}`);
 
-            let token = EncodeToken(email,user_id[0]['_id'].toString());
-            
-            await UserModel.updateOne({email: email}, {$set:{otp:"0"}});
-            
-            return {status: 'success', message: "Valid OTP", token: token};
+        let total = await UserModel.find({ email: email, otp: otp }).countDocuments();
+        //console.log(`Total matching records: ${total}`);
 
+        if (total === 1) {
+            let user = await UserModel.findOne({ email: email, otp: otp }).select('_id');
+            //console.log(`User ID: ${user ? user._id : 'not found'}`);
+
+            if (!user) {
+                throw new Error('User ID not found');
+            }
+
+            let token = EncodeToken(email, user._id.toString());
+            //console.log(`Generated Token: ${token}`);
+
+            await UserModel.updateOne({ email: email }, { $set: { otp: "0" } });
+            //console.log('OTP reset to 0');
+
+            return { status: 'success', message: "Valid OTP", token: token };
         } else {
-            return {status: 'fail', message: 'Invalid OTP'};
+            console.log('Invalid OTP');
+            return { status: 'fail', message: 'Invalid OTP' };
         }
-
     } catch (error) {
-        return {status: 'fail', message: 'Something went wrong.', data: error};
+        console.error('Error occurred:', error); // Log the error to the console for debugging
+        return { status: 'fail', message: 'Something went wrong.', data: error.message || error };
     }
-}
+};
+
+
 
 const SaveProfileService = async (req) => {
 

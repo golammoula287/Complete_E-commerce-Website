@@ -10,25 +10,32 @@ exports.UserOTP = async (req,res) => {
     return res.status(200).json(result);
 }
 
-exports.VerifyLogin = async (req,res) => {
-    let result = await VerifyOTPService(req);
+exports.VerifyLogin = async (req, res) => {
+    try {
+        let result = await VerifyOTPService(req);
 
-    if(result['status'] === "success") {
-        let cookieOptions = {
-            expires: new Date(Date.now()+24*60*60*1000),
-            httpOnly: false
-        };
-        res.cookie('token', result['token'], cookieOptions);
-        return res.status(200).json(result);
-    } else {
-        return res.status(200).json(result);
+        if (result.status === "success") {
+            // Set Cookie
+            let cookieOption = {
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+                httpOnly: true // Secure the cookie
+            };
+            // Set Cookie With Response
+            res.cookie('token', result.token, cookieOption);
+        }
+
+        // Send the result back to the client
+        res.json(result);
+    } catch (error) {
+        console.error('Error in VerifyLogin:', error); // Log the error
+        res.status(500).json({ status: 'fail', message: 'Internal Server Error', data: error.message || error });
     }
+};
 
-}
 
 exports.UserLogout = async (req,res) => {
     let cookieOptions = {
-        expires: new Date(Date.now()+24*60*60*1000),
+        expires: new Date(Date.now()-24*60*60*1000),
         httpOnly: false
     };
     res.cookie('token','',cookieOptions);

@@ -3,12 +3,12 @@ const nodemailer = require('nodemailer');
 const EmailSend = async(EmailTo, EmailText, EmailSubject) => {
 
     let transport = nodemailer.createTransport({
-        host: 'sandbox.smtp.mailtrap.io',
-        port: 2525,
+        host: 'mail.teamrabbil.com',
+        port: 25,
         secure: false,
         auth: {
-            user: '3ece2a052da422',
-            pass: '00836d56a939e1'
+            user: "info@teamrabbil.com",
+            pass: "~sR4[bhaC[Qs"
         },
         tls: {
             rejectUnauthorized: false
@@ -16,7 +16,7 @@ const EmailSend = async(EmailTo, EmailText, EmailSubject) => {
     });
 
     let mailOption = {
-        from: "MERN Ecommerce Site <info@xyz.com>",
+        from: "My E-commerce Shop <info@teamrabbil.com>",
         to: EmailTo,
         subject: EmailSubject,
         text: EmailText
