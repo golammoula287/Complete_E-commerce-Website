@@ -76,7 +76,7 @@ const SaveProfileService = async (req) => {
         reqBody.userID = user;
 
         await ProfileModel.updateOne({userID: user}, {$set:reqBody},{upsert:true})
-        return {status: 'success', message: 'Profile Save Success.'};
+        return {status: 'success', message: 'Profile Save Successfully.'};
     } catch (error) {
         return {status: 'fail', message: 'Something went wrong.', data: error};
     }

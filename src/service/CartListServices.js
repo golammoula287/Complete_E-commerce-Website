@@ -4,51 +4,56 @@ const ObjectId = mongoose.Types.ObjectId;
 
 const CartListService = async (req) => {
   try {
+    // Convert user_id from headers to ObjectId
     let user_id = new ObjectId(req.headers.user_id);
-
+    
+    // Define stages of the aggregation pipeline
     let matchStage = { $match: { userID: user_id } };
     let JoinStageProduct = {
       $lookup: {
-        from: "products",
-        localField: "productID",
-        foreignField: "_id",
-        as: "product",
+        from: 'products',
+        localField: 'productID',
+        foreignField: '_id',
+        as: 'product',
       },
     };
     let JoinStageBrand = {
       $lookup: {
-        from: "brands",
-        localField: "product.brandID",
-        foreignField: "_id",
-        as: "brand",
+        from: 'brands',
+        localField: 'product.brandID',
+        foreignField: '_id',
+        as: 'brand',
       },
     };
     let JoinStageCategory = {
       $lookup: {
-        from: "categories",
-        localField: "product.categoryID",
-        foreignField: "_id",
-        as: "category",
+        from: 'categories',
+        localField: 'product.categoryID',
+        foreignField: '_id',
+        as: 'category',
       },
     };
 
-    let unwindProductStage = { $unwind: "$product" };
-    let unwindBrandStage = { $unwind: "$brand" };
-    let unwindCategoryStage = { $unwind: "$category" };
+    // Handle potential issues with unwind
+    let unwindProductStage = { $unwind: { path: '$product', preserveNullAndEmptyArrays: true } };
+    let unwindBrandStage = { $unwind: { path: '$brand', preserveNullAndEmptyArrays: true } };
+    let unwindCategoryStage = { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } };
 
+    // Define projection stage
     let ProjectionStages = {
       $project: {
         userID: 0,
         createdAt: 0,
         updatedAt: 0,
-        "product._id": 0,
-        "product.categoryID": 0,
-        "product.brandID": 0,
-        "brand._id": 0,
-        "category._id": 0,
+        'product._id': 0,
+        'product.categoryID': 0,
+        'product.brandID': 0,
+        'brand._id': 0,
+        'category._id': 0,
       },
     };
 
+    // Aggregate data
     let data = await CartModel.aggregate([
       matchStage,
       JoinStageProduct,
@@ -59,11 +64,17 @@ const CartListService = async (req) => {
       unwindCategoryStage,
       ProjectionStages,
     ]);
-    return { status: "success", message: "Cart list Found.", data: data };
+
+    //console.log('Aggregated Data:', JSON.stringify(data));
+
+    return { status: 'success', message: 'Cart list Found.', data: data };
   } catch (error) {
-    return { status: "fail", message: "Something went wrong.", data: error };
+    console.error('Error in CartListService:', error);
+    return { status: 'fail', message: 'Something went wrong.', data: error };
   }
 };
+
+module.exports = CartListService;
 
 const SaveCartListService = async (req) => {
   try {
